@@ -1,11 +1,13 @@
 import React, { useRef, useState } from 'react';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import axios from 'axios';
+
 export default function Home() {
     const inputRef = useRef(null);
     const [image, setImage] = useState(null);
     const [before, setBefore] = useState(null);
-    const [detected, setdetected] = useState(null)
+    const [detected, setDetected] = useState(null);
+
     const handleClick = () => {
         inputRef.current.click();
     };
@@ -26,27 +28,29 @@ export default function Home() {
     };
 
     const handleSubmit = async () => {
-        let formData = new FormData();
-        formData.append('image', image);
-        const response = await axios.post('http://127.0.0.1:5000/objectdetection', formData);
-        if (response.status) {
-            setdetected(response.data.image)
-            console.log("Success")
+        try {
+            let formData = new FormData();
+            formData.append('image', image);
+            const response = await axios.post('http://127.0.0.1:5000/objectdetection', formData, {
+                responseType: 'blob', // Ensure response is treated as blob
+            });
+            if (response.status === 200) {
+                setDetected(URL.createObjectURL(response.data)); // Set detected image from response blob
+                setBefore(URL.createObjectURL(image)); // Set before image from uploaded image
+            }
+            setImage(null)
+        } catch (error) {
+            console.error('Error processing image:', error);
         }
-        setBefore(image);
-        setImage(null);
     };
     
-    
     const handleDownload = () => {
-        const url = URL.createObjectURL(before);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = 'ObjectDetectedImage.jpg'; // Set the desired file name
+        a.href = detected;
+        a.download = 'ObjectDetectedImage.jpg'; 
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
     };
 
     return (
@@ -82,19 +86,19 @@ export default function Home() {
                         </button>
                     </div>
                 </div>
-                </div>
-                {
-                    before ? 
-                    <div className='flex flex-col items-center justify-evenly'>
+            </div>
+            {
+                before && detected && 
+                <div className='flex flex-col items-center justify-evenly'>
                     <div className='text-4xl font-bold py-10'>
                         After Object Detection
                     </div>
                     <div className='flex justify-around py-10'>
                         <div className='px-20'>
-                            <img src={URL.createObjectURL(before)} className='border-solid border-8 border-gray-300 w-[450px] h-[324px] rounded-xl' />
+                            <img src={before} className='border-solid border-8 border-gray-300 w-[450px] h-[324px] rounded-xl' alt="Before Object Detection" />
                         </div>
                         <div className='px-20 '>
-                            <img src={URL.createObjectURL(before)} className='border-solid border-8 border-gray-300 w-[450px] h-[324px] rounded-xl' />
+                            <img src={detected} className='border-solid border-8 border-gray-300 w-[450px] h-[324px] rounded-xl' alt="After Object Detection" />
                             <div className='flex justify-end py-5'>
                                 <button onClick={handleDownload} className='px-6 py-2 bg-[#8245E7] rounded-md  font-semibold text-white'>
                                     Download Image
@@ -103,27 +107,18 @@ export default function Home() {
                                     </span>   
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>
-                : null
-                }
-                <div className='absolute top-[32rem] left-[8rem]'>
-                    <div className='w-[140px] h-[140px] bg-[#DBDBDB]'>
-                    </div>
-                    <div className='w-[140px] h-[140px] bg-[#58FD92] rounded-full -mt-16 ml-12 '>
-                    </div>
-
-                </div>
-                <div className='absolute top-[7rem] right-32'>
-                    <div className='w-[140px] h-[140px] bg-[#FDCF58] rounded-full '>
-                    </div>
-                    <div className='w-[140px] h-[140px] bg-[#58C2FD] rounded-full -mt-20 ml-16 '>
-                    </div>
-
-                </div>
-            
+            }
+            <div className='absolute top-[32rem] left-[8rem]'>
+                <div className='w-[140px] h-[140px] bg-[#DBDBDB]'></div>
+                <div className='w-[140px] h-[140px] bg-[#58FD92] rounded-full -mt-16 ml-12 '></div>
+            </div>
+            <div className='absolute top-[7rem] right-32'>
+                <div className='w-[140px] h-[140px] bg-[#FDCF58] rounded-full '></div>
+                <div className='w-[140px] h-[140px] bg-[#58C2FD] rounded-full -mt-20 ml-16 '></div>
+            </div>
         </>
     );
 }
