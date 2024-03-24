@@ -31,7 +31,7 @@ export default function Home() {
         try {
             let formData = new FormData();
             formData.append('image', image);
-            const response = await axios.post('http://127.0.0.1:5000/objectdetection', formData, {
+            const response = await axios.post('http://localhost:5000/objectdetection', formData, {
                 responseType: 'blob', // Ensure response is treated as blob
             });
             if (response.status === 200) {
